@@ -1,0 +1,36 @@
+# Anyinstaller Protocol (AIP) 1.0
+# 此文件必须命名为 config.toml，并放在安装包根目录。
+#
+# TOML 没有 null。对可选字段（icon、background）：
+#   - 省略键，或
+#   - 写成空字符串 ""
+# 都表示“不设置，使用默认值”。
+
+# 协议号。当前 AIP 只接受 1。
+protocol = 1
+
+# 应用名称：用于窗口标题、开始菜单文件夹和快捷方式名称。
+name = "Example App"
+
+# 可选：图标路径（推荐 .ico）。
+# 省略或写 "" 时使用 Anyinstaller 默认图标。
+# 可以是绝对路径，也可以是相对于包根目录的路径。
+# icon = "assets\app.ico"
+
+# 可选：客户端背景。
+# 支持：
+#   图片路径（绝对路径或相对于包根目录）
+#   "acrylic"、"acrylicBlur"、"mica"、"windowsManaged"、"transparent"
+#   "#RRGGBB"（6 位十六进制颜色）
+#
+# 省略、写 "" 或图片无效时：
+#   包内 background.webp -> background.avif -> background.png -> 白色
+# 强制白色（即使包内有背景图）：
+# background = "#FFFFFF"
+background = "acrylic"
+
+# 默认值。client 用它们初始化界面，backend 用它们初始化会话状态。
+[defaults]
+installLocation = '%LocalAppData%\Programs\Example App'
+createStartMenuFolder = true
+createDesktopShortcut = true
