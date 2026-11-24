@@ -1,0 +1,39 @@
+# Anyinstaller Protocol (AIP) v1 — 打包后配置 / packaged config
+#
+# 本文件展示打包器写入 foo.exe 的 config.toml 形态。
+# 运行时 stub 把它释放到私有会话目录包根目录，client/backend 只能读取这里
+# 出现的包内相对路径。
+#
+# This file shows the config.toml form the packager writes into foo.exe.
+# At runtime the stub extracts it to the private session package root, and
+# client/backend may read only the package-internal relative paths shown here.
+#
+# 规则 / Rules:
+#   - 不得出现本机绝对路径、盘符、UNC、设备前缀、..、ADS 或重解析点。
+#     No local absolute paths, drive letters, UNC, device prefixes, .., ADS,
+#     or reparse points.
+#   - 路径使用正斜杠，相对于会话包根目录。
+#     Paths use forward slashes and are relative to the session package root.
+#   - 特殊背景值（acrylic、mica、#RRGGBB 等）保持不变。
+#     Special background values (acrylic, mica, #RRGGBB, etc.) are unchanged.
+
+protocol = 1
+name = "Example App"
+
+# 打包器把源配置中的本机图标嵌入并重写为包内路径。
+# The packager embeds the source icon and rewrites it to a package path.
+icon = "assets/icon.ico"
+
+# 打包器把源配置中的本机背景图嵌入并重写为包内路径。
+# The packager embeds the source background image and rewrites its path.
+background = "assets/background.avif"
+
+# 如果源配置使用视觉效果或纯色，则原样保留，例如：
+# If the source config uses a visual effect or solid color, keep it as-is:
+# background = "acrylic"
+# background = "#FFFFFF"
+
+[defaults]
+installLocation = '%LocalAppData%\Programs\Example App'
+createStartMenuFolder = true
+createDesktopShortcut = true

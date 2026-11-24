@@ -1,35 +1,38 @@
-# Anyinstaller Protocol (AIP) 1.0
-# 此文件必须命名为 config.toml，并放在安装包根目录。
+# Anyinstaller Protocol (AIP) v1 — 源配置 / source config
 #
-# TOML 没有 null。对可选字段（icon、background）：
-#   - 省略键，或
-#   - 写成空字符串 ""
-# 都表示“不设置，使用默认值”。
+# 这是打包者机器上的源配置。文件名必须是 config.toml。
+# icon / background 可以是本机文件路径；打包器会把图片嵌入 foo.exe，
+# 并在打包后配置中把它们重写为包内相对路径（见 config.packaged.toml）。
+#
+# This is the source config on the packager's machine. The file name must be
+# config.toml. icon / background may be local file paths; the packager embeds
+# the images in foo.exe and rewrites them to package-internal relative paths in
+# the packaged config (see config.packaged.toml).
+#
+# TOML 没有 null。可选字段用省略或空字符串 "" 表示未设置。
+# TOML has no null. Omit optional keys or use "" to mean "not set".
 
-# 协议号。当前 AIP 只接受 1。
+# 协议号。AIP v1 只接受整数 1。
+# Protocol number. AIP v1 accepts only the integer 1.
 protocol = 1
 
-# 应用名称：用于窗口标题、开始菜单文件夹和快捷方式名称。
+# 应用名称：窗口标题、开始菜单文件夹、快捷方式名称。
+# Application name: window title, Start Menu folder, shortcut name.
 name = "Example App"
 
-# 可选：图标路径（推荐 .ico）。
-# 省略或写 "" 时使用 Anyinstaller 默认图标。
-# 可以是绝对路径，也可以是相对于包根目录的路径。
-# icon = "assets\app.ico"
+# 可选：图标（推荐 .ico）。源配置可以是本机路径。
+# Optional: icon (prefer .ico). The source config may use a local path.
+icon = 'C:\Users\Ali\Pictures\app.ico'
 
-# 可选：客户端背景。
-# 支持：
-#   图片路径（绝对路径或相对于包根目录）
-#   "acrylic"、"acrylicBlur"、"mica"、"windowsManaged"、"transparent"
-#   "#RRGGBB"（6 位十六进制颜色）
-#
-# 省略、写 "" 或图片无效时：
-#   包内 background.webp -> background.avif -> background.png -> 白色
-# 强制白色（即使包内有背景图）：
-# background = "#FFFFFF"
-background = "acrylic"
+# 可选：背景。可以是图片路径、视觉效果或纯色。
+# Optional: background. Image path, visual effect, or solid color.
+background = 'C:\Users\Ali\Pictures\background.avif'
+# background = "acrylic"
+# background = "#1E90FF"
 
 # 默认值。client 用它们初始化界面，backend 用它们初始化会话状态。
+# Defaults. The client initializes its UI from them; the backend initializes
+# session state from them.
 [defaults]
 installLocation = '%LocalAppData%\Programs\Example App'
 createStartMenuFolder = true
