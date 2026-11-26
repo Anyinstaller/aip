@@ -29,6 +29,7 @@ value = 'D:\Apps\Example'
 | `setCreateStartMenuFolder` | client → backend | 是否创建开始菜单文件夹 |
 | `setCreateDesktopShortcut` | client → backend | 是否创建桌面快捷方式 |
 | `startInstall` | client → backend | 开始安装 |
+| `installProgress` | backend → client | 安装进度（建议性，可省略） |
 | `installFinished` | backend → client | 安装完成（成功或失败） |
 | `readyToExit` | client → stub | client 已处理完毕，可以结束会话 |
 
@@ -107,6 +108,49 @@ type = "startInstall"
 - 第一个 `startInstall` 生效；之后的 `startInstall` 必须被忽略。
 - 安装可以同步或异步，但 backend 必须最终发送且只发送一次 `installFinished`。
 - 安装期间收到的设置消息必须被忽略。
+
+## installProgress
+
+backend 在安装过程中向 client 报告建议性进度，主要用于进度条和阶段提示。
+
+```toml
+type = "installProgress"
+stage = "extracting"
+percent = 42
+current = 5242880
+total = 12582912
+```
+
+| 字段 | 类型 | 必需 | 说明 |
+| --- | --- | --- | --- |
+| `stage` | string | 是 | 稳定阶段标识，用于本地化显示 |
+| `percent` | integer | 是 | 总进度，范围 `0..=100` |
+| `current` | integer | 否 | 当前阶段已完成量，非负 |
+| `total` | integer | 否 | 当前阶段总量，非负；与 `current` 同时出现时应满足 `current <= total` |
+
+推荐阶段：
+
+| `stage` | 建议百分比 | 含义 |
+| --- | --- | --- |
+| `validating` | 0 | 校验配置和安装参数 |
+| `preparing` | 5 | 创建暂存目录、准备安装 |
+| `extracting` | 10–78 | 解压 payload；可携带 `current` / `total` 字节数 |
+| `verifying` | 80 | 复查解压结果 |
+| `committing` | 85 | 提交安装目录 |
+| `creatingShortcuts` | 92–96 | 创建快捷方式 |
+| `finishing` | 99–100 | 清理和收尾 |
+
+规则：
+
+- `installProgress` 是建议性消息，不是完成信号；只有 `installFinished` 能结束安装。
+- backend 可以完全不发送进度，旧 client 必须继续使用不确定进度。
+- 同一会话中 `percent` 应单调不减。
+- backend 可以在提取阶段频繁发送，但应避免发送无变化的消息。
+- client 必须忽略 `percent` 越界、字段类型错误或无法解析的进度消息，不得因此中止安装。
+- client 应忽略未知 `stage` 的细节，但仍可使用合法 `percent`。
+- 未知字段必须忽略，以支持向前兼容。
+- backend 不得在 `installFinished` 之后发送 `installProgress`。
+- 增加 `stage` 值或发送本消息不提升协议号。
 
 ## installFinished
 
@@ -195,6 +239,12 @@ type = "startInstall"
 ```
 
 ```toml
+type = "installProgress"
+stage = "finishing"
+percent = 100
+```
+
+```toml
 type = "installFinished"
 success = true
 ```
@@ -207,6 +257,7 @@ type = "readyToExit"
 
 ```text
 set* / startInstall  client → stub → backend
+installProgress      backend → stub → client
 installFinished      backend → stub → client
 readyToExit          client → stub（消费，不转发）
 ```

@@ -21,6 +21,8 @@
 | 单帧超过 1 MiB，或单方向缓存超过 64 帧 / 4 MiB | stub 中止会话 |
 | 消息字段类型错误或必填字段缺失 | 三个 `set*`：对应字段标记为无效；后续合法消息可清除。`startInstall` 时仍有无效字段则 `installFinished success = false`。无法解析的 `installFinished`：client 按失败处理 |
 | 未知消息类型或未知字段 | 接收方忽略；stub 对除 `readyToExit` 外的未知类型照常转发 |
+| `installProgress` 字段非法或无法解析 | client 忽略该进度消息，继续等待 `installFinished`，不得因此中止安装 |
+| backend 无法发送 `installProgress` | 进度是建议性信息；backend 可继续安装，最终仍以 `installFinished` 为准 |
 | backend 在 `installFinished` 前退出或断开 | stub 关闭 client 管道；client 将 EOF 视为失败；stub 清理后退出 |
 | backend 在 `installFinished` 后退出 | 正常；stub 保持 client 管道直到 `readyToExit` 或 client 断开 |
 | client 未发送 `readyToExit` 就退出 | stub 视为取消：关闭 backend 管道，等待 5 秒后强制结束，清理并退出 |
@@ -36,7 +38,7 @@
 | 子进程连接管道 | 30 秒 |
 | 关闭等待 | 5 秒 |
 | 管道读写 | 必须有超时或可取消；不得无限阻塞 |
-| 安装本身 | 不设固定超时；client 显示不确定进度，用户可关闭窗口取消 |
+| 安装本身 | 不设固定超时；client 显示实时进度；没有进度消息时显示不确定进度，用户可关闭窗口取消 |
 
 ## 安装失败后的状态
 

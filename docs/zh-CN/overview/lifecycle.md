@@ -52,9 +52,10 @@ client ── readyToExit ──> stub ── 结束 client/backend ──> stub
 1. client 可以随时发送设置消息；backend 记住最后一个合法值。
 2. client 在 `startInstall` 前发送当前三个设置值（推荐全部发送，至少发送被修改过的值）。
 3. backend 收到第一个 `startInstall` 后开始安装，后续 `startInstall` 忽略。
-4. backend 只能发送一次 `installFinished`，无论成功还是失败。
-5. client 收到 `installFinished` 并完成结果展示后发送 `readyToExit`。
-6. stub 收到 `readyToExit` 后结束整个会话。
+4. backend 可以发送零次或多次 `installProgress`；client 据此更新进度，但不得把进度当作完成。
+5. backend 只能发送一次 `installFinished`，无论成功还是失败。
+6. client 收到 `installFinished` 并完成结果展示后发送 `readyToExit`。
+7. stub 收到 `readyToExit` 后结束整个会话。
 
 ## 关闭
 

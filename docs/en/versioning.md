@@ -19,7 +19,7 @@
 The following changes do **not** require a new protocol number; they only need to remain backward compatible:
 
 - adding optional config fields;
-- adding new message types;
+- adding new message types such as `installProgress`;
 - adding new special background values (provided old implementations treat them as invalid image paths and fall back to white);
 - adding new optional asset files;
 - fixing documentation errors without changing wire behavior.

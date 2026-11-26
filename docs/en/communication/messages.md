@@ -29,6 +29,7 @@ General rules:
 | `setCreateStartMenuFolder` | client → backend | Create a Start Menu folder or not |
 | `setCreateDesktopShortcut` | client → backend | Create a desktop shortcut or not |
 | `startInstall` | client → backend | Start the installation |
+| `installProgress` | backend → client | Advisory installation progress (optional) |
 | `installFinished` | backend → client | Installation finished (success or failure) |
 | `readyToExit` | client → stub | Client is done; the session may end |
 
@@ -103,6 +104,49 @@ type = "startInstall"
 - The first `startInstall` takes effect; later ones must be ignored.
 - Installation may be synchronous or asynchronous, but the backend must eventually send exactly one `installFinished`.
 - Settings received during installation must be ignored.
+
+## installProgress
+
+The backend reports advisory installation progress to the client for progress bars and stage labels.
+
+```toml
+type = "installProgress"
+stage = "extracting"
+percent = 42
+current = 5242880
+total = 12582912
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `stage` | string | Yes | Stable stage identifier used for localized labels |
+| `percent` | integer | Yes | Overall progress in `0..=100` |
+| `current` | integer | No | Amount completed in the current stage; non-negative |
+| `total` | integer | No | Amount expected in the current stage; non-negative; `current <= total` when both are present |
+
+Recommended stages:
+
+| `stage` | Suggested percent | Meaning |
+| --- | --- | --- |
+| `validating` | 0 | Validate configuration and install arguments |
+| `preparing` | 5 | Create staging storage and prepare |
+| `extracting` | 10–78 | Extract payload; may include byte `current` / `total` |
+| `verifying` | 80 | Re-check extracted contents |
+| `committing` | 85 | Commit the install directory |
+| `creatingShortcuts` | 92–96 | Create shortcuts |
+| `finishing` | 99–100 | Cleanup and finalization |
+
+Rules:
+
+- `installProgress` is advisory, not a completion signal; only `installFinished` completes installation.
+- The backend may omit progress entirely; older clients must remain on indeterminate progress.
+- `percent` should be non-decreasing within a session.
+- The backend may send progress frequently while extracting, but should suppress unchanged values.
+- The client must ignore malformed progress messages, including out-of-range `percent` or wrong field types; it must not abort installation because of them.
+- The client should ignore unknown `stage` details while still using a valid `percent`.
+- Unknown fields must be ignored for forward compatibility.
+- The backend must not send `installProgress` after `installFinished`.
+- Adding stage values or this message does not require a protocol-number bump.
 
 ## installFinished
 
@@ -191,6 +235,12 @@ type = "startInstall"
 ```
 
 ```toml
+type = "installProgress"
+stage = "finishing"
+percent = 100
+```
+
+```toml
 type = "installFinished"
 success = true
 ```
@@ -203,6 +253,7 @@ Relay paths:
 
 ```text
 set* / startInstall  client → stub → backend
+installProgress      backend → stub → client
 installFinished      backend → stub → client
 readyToExit          client → stub (consumed, not forwarded)
 ```

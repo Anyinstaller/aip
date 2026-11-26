@@ -21,6 +21,8 @@
 | Frame over 1 MiB, or per-direction buffer over 64 frames / 4 MiB | Stub aborts the session |
 | Wrong field type or missing required field | For the three `set*` messages, mark that field invalid; a later valid message may clear it. If a field is still invalid at `startInstall`, send `installFinished success = false`. An unparsable `installFinished` makes the client treat the install as failed |
 | Unknown message type or unknown field | Receiver ignores it; the stub forwards unknown types except `readyToExit` |
+| Malformed or unparsable `installProgress` | The client ignores that progress message and keeps waiting for `installFinished`; it must not abort installation because of it |
+| Backend cannot send `installProgress` | Progress is advisory; the backend may continue, and `installFinished` remains authoritative |
 | Backend exits or disconnects before `installFinished` | Stub closes the client pipe; client treats EOF as failure; stub cleans up and exits |
 | Backend exits after `installFinished` | Normal; stub keeps the client pipe until `readyToExit` or client disconnect |
 | Client exits without `readyToExit` | Stub treats it as cancellation: closes the backend pipe, waits 5 seconds, force-terminates, cleans up, exits |
@@ -36,7 +38,7 @@
 | Child connects to pipe | 30 seconds |
 | Shutdown grace | 5 seconds |
 | Pipe reads/writes | Must have a timeout or be cancelable; no indefinite blocking |
-| Installation itself | No fixed timeout; the client shows indeterminate progress and the user can close the window to cancel |
+| Installation itself | No fixed timeout; the client shows live progress, or indeterminate progress when no progress messages arrive; the user can close the window to cancel |
 
 ## State after failure
 

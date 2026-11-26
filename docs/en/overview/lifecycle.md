@@ -52,9 +52,10 @@ Ordering requirements:
 1. The client may send settings at any time; the backend remembers the last valid value.
 2. Before `startInstall`, the client sends its current three settings (preferably all of them, at least the ones the user changed).
 3. The backend starts the installation on the first `startInstall`; later `startInstall` messages are ignored.
-4. The backend sends exactly one `installFinished`, whether the installation succeeds or fails.
-5. After receiving `installFinished` and finishing the result UI, the client sends `readyToExit`.
-6. The stub ends the session when it receives `readyToExit`.
+4. The backend may send zero or more `installProgress` messages; the client updates progress but must never treat progress as completion.
+5. The backend sends exactly one `installFinished`, whether the installation succeeds or fails.
+6. After receiving `installFinished` and finishing the result UI, the client sends `readyToExit`.
+7. The stub ends the session when it receives `readyToExit`.
 
 ## Shutdown
 
